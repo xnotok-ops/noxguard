@@ -1,0 +1,61 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  font-family: 'Space Grotesk', sans-serif;
+  background-color: #0a0e1a;
+  color: #e2e8f0;
+  margin: 0;
+}
+
+code, .mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+input, textarea {
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+.glass-card {
+  background: rgba(17, 24, 39, 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(30, 41, 59, 0.6);
+  border-radius: 16px;
+}
+
+.glow-accent {
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.15);
+}
+
+.btn-primary {
+  @apply bg-nox-accent hover:bg-nox-accentHover text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200;
+}
+
+.btn-secondary {
+  @apply bg-nox-card border border-nox-border hover:border-nox-accent text-nox-text font-medium py-3 px-6 rounded-xl transition-all duration-200;
+}
+
+.input-field {
+  @apply w-full bg-nox-dark border border-nox-border rounded-xl px-4 py-3 text-nox-text placeholder-nox-muted focus:outline-none focus:border-nox-accent transition-colors;
+}
+
+.status-active {
+  @apply bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded-full text-sm font-medium;
+}
+
+.status-closed {
+  @apply bg-red-500/20 text-red-400 px-3 py-1 rounded-full text-sm font-medium;
+}
+
+.status-submitted {
+  @apply bg-amber-500/20 text-amber-400 px-3 py-1 rounded-full text-sm font-medium;
+}
+
+.status-approved {
+  @apply bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded-full text-sm font-medium;
+}
+
+.status-rejected {
+  @apply bg-red-500/20 text-red-400 px-3 py-1 rounded-full text-sm font-medium;
+}
