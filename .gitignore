@@ -1,0 +1,59 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build outputs
+dist/
+build/
+out/
+.next/
+.nuxt/
+
+# Environment & secrets
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+
+yarn-error.log*
+*.log
+
+# Hardhat / Foundry / Forge
+cache/
+artifacts/
+typechain/
+typechain-types/
+out/
+broadcast/
+
+# Coverage
+coverage/
+*.lcov
+
+# Backups
+*.bak
+*.bak*
+*.backup
+*~
+
+# OS
+.DS_Store
+
+# Local dev
+.cache/
+tmp/
+temp/
