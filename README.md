@@ -1,158 +1,277 @@
-# NoxGuard — Confidential Audit Escrow Protocol
+# 🛡️ NoxGuard
 
-> Trustless bug bounty escrow where reward amounts stay encrypted until settlement.
+**Confidential Bug Bounty Escrow on Arbitrum Sepolia**
 
-## Problem
+Built for the [iExec Vibe Coding Challenge 2026](https://iex.ec/) using the Nox Protocol (FHE + TEE) and ERC-7984 Confidential Tokens.
 
-Bug bounty platforms today have two critical trust gaps:
+[![Network](https://img.shields.io/badge/Network-Arbitrum_Sepolia-blue)](https://sepolia.arbiscan.io/)
+[![Built With](https://img.shields.io/badge/Built_With-iExec_Nox-orange)](https://docs.iex.ec/)
+[![Standard](https://img.shields.io/badge/Standard-ERC--7984-green)](https://eips.ethereum.org/EIPS/eip-7984)
+[![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
 
-1. **Hunters see reward amounts** — they cherry-pick programs by payout, not by code quality or vulnerability impact
-2. **Projects must reveal budgets** — competitors and attackers can see how much a project values its security
+---
 
-NoxGuard solves both by making bounty rewards confidential using Nox Protocol's Fully Homomorphic Encryption (FHE).
+## 🎯 The Problem
 
-## How It Works
+Public bug bounty programs **leak strategic information**. When a $50,000 reward gets paid on-chain to a hunter, anyone can see it — including:
+- Competing protocols guessing how severe the bug was
+- Other hunters reverse-engineering payout patterns to find similar issues
+- Attackers profiling which projects pay big (= which projects had big bugs)
 
-1. **Project owner** deposits confidential tokens (cRLC/cUSDC) as bounty reward — amount is encrypted on-chain
-2. **Hunter** submits a finding with a commit hash of their report
-3. **Project owner** reviews the finding off-chain, then approves with an encrypted payout amount
-4. **Settlement** happens on-chain — the hunter receives confidential tokens, amount hidden from everyone else
-5. **Hunter** can unwrap confidential tokens to regular ERC-20 whenever they want
+Reward amounts are **business intelligence**. They should not be publicly broadcast.
 
-All reward amounts remain encrypted throughout the entire lifecycle. Nobody except the project owner and the receiving hunter knows how much was paid.
+## 💡 The Solution
 
-## Architecture
+NoxGuard is an **end-to-end confidential bounty escrow**. Reward amounts are encrypted at every stage of the lifecycle:
+
+1. **Project Owner** locks an encrypted bounty amount in the escrow contract
+2. **Hunter** submits a finding with the keccak256 hash of their report
+3. **Project Owner** reviews the finding off-chain, then approves with an encrypted payout
+4. **Settlement** happens on-chain — the hunter receives confidential tokens (cRLC), amount hidden from everyone else
+5. **Hunter** can later unwrap confidential tokens to regular ERC-20 whenever they want
+
+All reward amounts remain encrypted throughout the entire lifecycle. **Nobody except the project owner and the receiving hunter knows how much was paid.**
+
+---
+
+## 🚀 Live Demo
+
+NoxGuard is **fully deployed and operational** on Arbitrum Sepolia:
+
+| Component | Address | Explorer |
+|-----------|---------|----------|
+| **NoxGuardEscrow** | `0x6f3156ae13890ad2110e5041ac218230ef483d45` | [Arbiscan ↗](https://sepolia.arbiscan.io/address/0x6f3156ae13890ad2110e5041ac218230ef483d45) |
+| **cRLC Token** (ERC-7984) | `0x92B23f4A59175415ced5CB37e64a1FC6A9D79af4` | [Arbiscan ↗](https://sepolia.arbiscan.io/address/0x92B23f4A59175415ced5CB37e64a1FC6A9D79af4) |
+
+**Network details:**
+- **Chain:** Arbitrum Sepolia
+- **Chain ID:** `421614`
+- **RPC:** `https://sepolia-rollup.arbitrum.io/rpc`
+
+**Faucets you'll need:**
+- 💧 **Sepolia ETH** (for gas) — [Alchemy](https://www.alchemy.com/faucets/arbitrum-sepolia) · [Chainlink](https://faucets.chain.link/arbitrum-sepolia)
+- 🪙 **cRLC tokens** — [iExec Confidential DeFi Faucet](https://cdefi.iex.ec/)
+
+> **Demo video:** _Coming soon — full E2E walkthrough._
+
+---
+
+## 🏗️ Architecture
 
 ```
 ┌─────────────────────────────────────────────────┐
 │                  NoxGuard dApp                   │
-│  ┌───────────┐ ┌───────────┐ ┌───────────────┐  │
-│  │  Project   │ │  Hunter   │ │  ChainGPT     │  │
-│  │  Owner UI  │ │  UI       │ │  Quality Gate │  │
-│  └─────┬─────┘ └─────┬─────┘ └───────┬───────┘  │
-│        │              │               │          │
-│  ┌─────▼──────────────▼───────────────▼───────┐  │
-│  │           Nox JS SDK (@iexec-nox/handle)   │  │
-│  │     encrypt / decrypt / encryptInput       │  │
-│  └─────────────────┬──────────────────────────┘  │
-│                    │                             │
-└────────────────────┼─────────────────────────────┘
-                     │
-        ┌────────────▼────────────────┐
-        │   NoxGuardEscrow.sol        │
-        │   (Arbitrum Sepolia)        │
-        │                             │
-        │   createBounty()            │
-        │   submitFinding()           │
-        │   approveFinding()          │
-        │   closeBounty()             │
-        └────────────┬────────────────┘
-                     │
-        ┌────────────▼────────────────┐
-        │   ERC-7984 Confidential     │
-        │   Token (cRLC / cUSDC)      │
-        │   Nox Protocol (FHE + TEE)  │
-        └─────────────────────────────┘
+│  ┌──────────┐ ┌──────────┐ ┌──────────────┐    │
+│  │ Project  │ │  Hunter  │ │  Encrypted   │    │
+│  │ Owner UI │ │    UI    │ │   Storage    │    │
+│  └─────┬────┘ └─────┬────┘ └──────┬───────┘    │
+│        │            │             │             │
+│  ┌─────▼────────────▼─────────────▼────────┐   │
+│  │       Nox JS SDK (@iexec-nox/handle)    │   │
+│  │     encrypt / decrypt / encryptInput    │   │
+│  └──────────────────┬──────────────────────┘   │
+│                     │                           │
+└─────────────────────┼───────────────────────────┘
+                      │
+        ┌─────────────▼───────────────────┐
+        │   NoxGuardEscrow.sol            │
+        │   (Arbitrum Sepolia)            │
+        │                                 │
+        │   createBounty()                │
+        │   submitFinding()               │
+        │   approveFinding()              │
+        │   closeBounty()                 │
+        └─────────────┬───────────────────┘
+                      │
+        ┌─────────────▼───────────────────┐
+        │   ERC-7984 Confidential Token   │
+        │   (cRLC on Nox Protocol)        │
+        │   FHE + TEE encrypted balances  │
+        └─────────────────────────────────┘
 ```
 
-## Tech Stack
+---
 
-- **Smart Contract:** Solidity ^0.8.28, ERC-7984, Nox SDK
-- **Frontend:** React + Viem + Tailwind CSS
-- **Encryption:** Nox JS SDK (`@iexec-nox/handle`)
-- **AI Quality Gate:** ChainGPT API (smart contract audit + report validation)
-- **Network:** Arbitrum Sepolia (Testnet)
-- **Token:** cRLC (Confidential RLC) from iExec faucet
+## 🛠️ Tech Stack
 
-## Quick Start
+| Layer | Technology |
+|-------|-----------|
+| **Smart Contract** | Solidity ^0.8.28, ERC-7984, Nox Protocol SDK |
+| **Frontend** | React 18 + Viem + Tailwind CSS |
+| **Encryption** | Nox JS SDK (`@iexec-nox/handle`) |
+| **Network** | Arbitrum Sepolia (Testnet) |
+| **Token** | cRLC (Confidential RLC) — ERC-7984 |
+| **Crypto Backend** | iExec Nox Protocol (FHE + TEE) |
+
+---
+
+## ⚡ Quick Start
 
 ### Prerequisites
-- Node.js 18+
-- MetaMask or WalletConnect-compatible wallet
-- Arbitrum Sepolia ETH (for gas)
-- cRLC tokens (get from https://cdefi.iex.ec/)
+- **Node.js 18+** and npm
+- **MetaMask** (or any EIP-1193 compatible wallet)
+- **Arbitrum Sepolia ETH** for gas (~0.01 ETH is plenty)
+- **cRLC tokens** from [iExec faucet](https://cdefi.iex.ec/)
 
 ### Installation
 
 ```bash
 # Clone the repo
 git clone https://github.com/xnotok-ops/noxguard.git
-cd noxguard
+cd noxguard/frontend
 
-# Install frontend dependencies
-cd frontend
+# Install dependencies
 npm install
 
-# Set environment variables
-cp .env.example .env
-# Edit .env with your values
-
-# Start development server
+# Start the dev server
 npm run dev
 ```
 
-### Smart Contract Deployment
+The app will be available at `http://localhost:5173`.
 
-The contract is deployed on Arbitrum Sepolia at: `[CONTRACT_ADDRESS]`
+### Connect Your Wallet
 
-To deploy your own:
-```bash
-# Using Remix IDE
-# 1. Open contracts/NoxGuardEscrow.sol in Remix
-# 2. Set compiler to 0.8.28
-# 3. Connect to Arbitrum Sepolia via Injected Provider
-# 4. Deploy
-```
+1. Open the dApp in your browser
+2. Click **Connect Wallet** — make sure MetaMask is set to **Arbitrum Sepolia**
+3. If you don't have Arbitrum Sepolia configured:
+   - Network name: `Arbitrum Sepolia`
+   - RPC URL: `https://sepolia-rollup.arbitrum.io/rpc`
+   - Chain ID: `421614`
+   - Currency: `ETH`
+   - Block explorer: `https://sepolia.arbiscan.io`
 
-## Usage Flow
+---
+
+## 🔄 Usage Flow
 
 ### As a Project Owner
-1. Connect wallet on Arbitrum Sepolia
-2. Get cRLC from faucet (https://cdefi.iex.ec/)
-3. Set NoxGuard contract as operator on cRLC
-4. Create a bounty — specify title, scope, and encrypted reward amount
-5. Review submitted findings
-6. Approve findings with encrypted payout amounts
 
-### As a Bug Hunter
-1. Connect wallet on Arbitrum Sepolia
-2. Browse active bounties (reward amounts are hidden)
-3. Submit findings with a report hash
-4. Receive encrypted payout when approved
-5. Unwrap cRLC to RLC whenever ready
+1. **Approve cRLC operator** — grant the escrow contract permission to move your confidential tokens (`setOperator`)
+2. **Create a bounty** — fill in title, description, and reward amount. The reward gets encrypted client-side via `encryptInput(value, 'uint256', escrowAddress)` before being sent on-chain
+3. **Review submissions** — hunters submit findings with a `keccak256` hash of their report. You verify off-chain
+4. **Approve & pay** — encrypt the payout amount (can differ from initial bounty for partial/scaled rewards) and call `approveFinding`. The hunter's balance updates with an encrypted handle
 
-## Key Features
+### As a Hunter
 
-- **Hidden Bounty Amounts** — Reward pool encrypted via Nox FHE
-- **Trustless Settlement** — On-chain escrow, no intermediary
-- **Commit-Reveal Reports** — Finding hash committed first, full report revealed after payment
-- **Selective Disclosure** — Project owners can grant auditors view access to escrow balance
-- **AI Quality Gate** — ChainGPT validates report structure before escrow processing
-- **ERC-7984 Compliant** — Uses the official confidential token standard
+1. **Find a vulnerability** in a project that posted a NoxGuard bounty
+2. **Submit a finding** — paste your full report into the dApp; it gets hashed locally and the hash is committed on-chain
+3. **Wait for approval** — once approved, your cRLC balance updates with an encrypted amount
+4. **Unwrap when ready** — use the iExec confidential token UI to convert cRLC → RLC whenever you want
 
-## Project Structure
+---
+
+## 🐛 Troubleshooting
+
+These are real issues we hit during development — sharing so you don't have to debug them yourself.
+
+### "Missing required parameters: applicationContract"
+The Nox SDK `encryptInput` uses **positional arguments**, not an object:
+```js
+// ✅ Correct
+const encrypted = await handleClient.encryptInput(BigInt(amount), 'uint256', NOXGUARD_ADDRESS);
+
+// ❌ Wrong
+const encrypted = await handleClient.encryptInput({ value: amount, type: 'uint256', applicationContract: addr });
+```
+Supported types: `bool`, `uint16`, `uint256`, `int16`, `int256`.
+
+### "max fee per gas less than block base fee"
+Arbitrum Sepolia base fee is around 0.02 gwei but spikes happen. Set headroom:
+```js
+maxFeePerGas: 1000000000n, // 1 gwei = 50x base fee buffer
+```
+
+### "Cannot read properties of undefined (reading 'length')"
+The SDK returns `{ handle, handleProof }`, not `{ handle, inputProof }`:
+```js
+const encrypted = await handleClient.encryptInput(...);
+const handle = encrypted.handle;
+const proof = encrypted.handleProof; // ✅ NOT encrypted.inputProof
+```
+
+### Multiple wallets conflict
+If you have **Tally Ho, Razor Wallet, Backpack, Zerion**, etc. installed alongside MetaMask, they all inject `window.ethereum` and fight over connection. **Disable all except MetaMask** for this dApp.
+
+### MetaMask nonce desync after wallet switch
+If you switch accounts and transactions start failing with nonce errors:
+**MetaMask → Settings → Advanced → "Clear activity and nonce data"**.
+
+---
+
+## 🔑 What We Learned About iExec / Nox SDK
+
+Building NoxGuard taught us a lot about the Nox developer experience. Full feedback writeup in [`feedback.md`](./feedback.md). Highlights:
+
+**Wins:**
+- ERC-7984 confidential tokens are surprisingly usable once you grok the handle lifecycle
+- `Nox.fromExternal()` + `Nox.allowTransient()` pattern is clean and intuitive
+- EIP-712 gasless decryption flow gives great UX
+- The `cdefi.iex.ec` faucet + token wizard onboarding is excellent
+
+**Pain points:**
+- Documentation for the JS SDK is sparse — many methods lack examples
+- Error messages from Nox protocol could be more descriptive
+- Gas estimation is unreliable for Nox operations (manual override needed)
+- Getting Arbitrum Sepolia ETH was harder than getting cRLC itself
+
+---
+
+## 📁 Project Structure
 
 ```
 noxguard/
 ├── contracts/
-│   └── NoxGuardEscrow.sol      # Core escrow contract
+│   └── NoxGuardEscrow.sol      # Main escrow contract (ERC-7984 aware)
 ├── frontend/
 │   ├── src/
-│   │   ├── App.jsx             # Main application
-│   │   ├── components/         # UI components
-│   │   ├── hooks/              # Custom React hooks
-│   │   └── utils/              # Contract ABIs & helpers
-│   └── package.json
-├── feedback.md                 # iExec tools feedback
-└── README.md
+│   │   ├── App.jsx              # Main UI (837 lines, 6 hoisted components)
+│   │   ├── main.jsx
+│   │   ├── index.css            # Tailwind base
+│   │   └── utils/
+│   │       └── contracts.js     # ABIs and chain config
+│   ├── index.html
+│   ├── package.json
+│   ├── vite.config.js
+│   ├── tailwind.config.js
+│   └── postcss.config.js
+├── README.md                    # This file
+├── feedback.md                  # iExec SDK feedback for the team
+└── .gitignore
 ```
 
-## License
+---
 
-MIT
+## 🎬 Demo
 
-## Built For
+> _Demo video link coming soon — recording a full E2E walkthrough._
 
-[iExec Vibe Coding Challenge](https://dorahacks.io/hackathon/vibe-coding-iexec/detail) — May 2026
+**E2E flow verified on-chain:**
 
-Built with Nox Protocol, ERC-7984 Confidential Tokens, and ChainGPT.
+1. ✅ **Owner created bounty** — encrypted reward locked in escrow
+2. ✅ **Hunter submitted finding** — report hash committed (`keccak256(toHex(report))`)
+3. ✅ **Owner approved & paid** — encrypted payout transferred
+4. ✅ **Hunter balance verified** — `confidentialBalanceOf` handle changed from sentinel to a real encrypted balance handle
+
+---
+
+## 🤝 Acknowledgments
+
+- **iExec Team** — for the Nox Protocol, the Vibe Coding Challenge, and the excellent [cdefi.iex.ec](https://cdefi.iex.ec/) onboarding tools
+- **OpenZeppelin** — for ERC-7984 reference patterns
+- **Arbitrum** — for fast, cheap testnet infrastructure
+- **The bug bounty community** — this project exists because confidentiality matters in our industry
+
+---
+
+## 📜 License
+
+MIT — see [LICENSE](LICENSE).
+
+---
+
+## 📬 Contact
+
+Built by **Notok Labs** ([@xnotok-ops](https://github.com/xnotok-ops)) for the iExec Vibe Coding Challenge 2026.
+
+Found a bug? Open an issue on [GitHub](https://github.com/xnotok-ops/noxguard/issues).
+
