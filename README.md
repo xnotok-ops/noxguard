@@ -11,6 +11,16 @@ Built for the [iExec Vibe Coding Challenge 2026](https://iex.ec/) using the Nox 
 
 ---
 
+## 🚀 Try It Now
+
+> **Live demo:** [**https://noxguard-one.vercel.app**](https://noxguard-one.vercel.app)
+>
+> Connect MetaMask on **Arbitrum Sepolia**, grab some [cRLC from the iExec faucet](https://cdefi.iex.ec/) and a bit of [Arbitrum Sepolia ETH](https://www.alchemy.com/faucets/arbitrum-sepolia) for gas, and you can create or submit to a bounty in under a minute.
+
+![NoxGuard bounty list](frontend/screenshots/01-bounty-list.png)
+
+---
+
 ## 🎯 The Problem
 
 Public bug bounty programs **leak strategic information**. When a $50,000 reward gets paid on-chain to a hunter, anyone can see it — including:
@@ -34,25 +44,39 @@ All reward amounts remain encrypted throughout the entire lifecycle. **Nobody ex
 
 ---
 
-## 🚀 Live Demo
+## 📸 End-to-End Walkthrough
 
-NoxGuard is **fully deployed and operational** on Arbitrum Sepolia:
+The flow below is the full lifecycle — from creating a bounty to a hunter committing a finding hash on-chain. All five steps are reproducible right now on the [live demo](https://noxguard-one.vercel.app).
 
-| Component | Address | Explorer |
-|-----------|---------|----------|
-| **NoxGuardEscrow** | `0x6f3156ae13890ad2110e5041ac218230ef483d45` | [Arbiscan ↗](https://sepolia.arbiscan.io/address/0x6f3156ae13890ad2110e5041ac218230ef483d45) |
-| **cRLC Token** (ERC-7984) | `0x92B23f4A59175415ced5CB37e64a1FC6A9D79af4` | [Arbiscan ↗](https://sepolia.arbiscan.io/address/0x92B23f4A59175415ced5CB37e64a1FC6A9D79af4) |
+### 1. Browse active bounties
 
-**Network details:**
-- **Chain:** Arbitrum Sepolia
-- **Chain ID:** `421614`
-- **RPC:** `https://sepolia-rollup.arbitrum.io/rpc`
+Each card shows the title, scope summary, finding count, and an **encrypted reward** (`****`) that nobody but the owner and the eventual recipient can see.
 
-**Faucets you'll need:**
-- 💧 **Sepolia ETH** (for gas) — [Alchemy](https://www.alchemy.com/faucets/arbitrum-sepolia) · [Chainlink](https://faucets.chain.link/arbitrum-sepolia)
-- 🪙 **cRLC tokens** — [iExec Confidential DeFi Faucet](https://cdefi.iex.ec/)
+![Bounty list](frontend/screenshots/01-bounty-list.png)
 
-> **Demo video:** _Coming soon — full E2E walkthrough._
+### 2. Owner creates a new bounty
+
+The reward amount is entered in plain text in the form, then **encrypted client-side** via the Nox JS SDK before being deposited into the escrow contract. The amount is never exposed in any transaction calldata or contract event.
+
+![Create bounty form](frontend/screenshots/02-create-bounty.png)
+
+### 3. Bounty goes live
+
+Right after creation, anyone can see the bounty exists, its scope, and that the reward is encrypted (`****`) — but not the amount. Findings count starts at zero.
+
+![Bounty detail — empty state](frontend/screenshots/03-bounty-detail.png)
+
+### 4. Hunter submits a finding
+
+The hunter writes their full report off-chain. NoxGuard hashes it locally with `keccak256` and only commits the hash on-chain — preventing front-running of the actual report content while still creating cryptographic proof of submission timing.
+
+![Submit finding form](frontend/screenshots/04-submit-finding.png)
+
+### 5. Finding committed on-chain
+
+The submission is now permanently anchored on Arbitrum Sepolia. The owner can verify the hash and review the off-chain report at their leisure, then approve and pay an **encrypted payout amount** that may differ from the displayed bounty.
+
+![Finding submitted](frontend/screenshots/05-finding-submitted.png)
 
 ---
 
@@ -92,6 +116,24 @@ NoxGuard is **fully deployed and operational** on Arbitrum Sepolia:
 
 ---
 
+## 🔗 Deployed Addresses
+
+| Component | Address | Explorer |
+|-----------|---------|----------|
+| **NoxGuardEscrow** | `0x6f3156ae13890ad2110e5041ac218230ef483d45` | [Arbiscan ↗](https://sepolia.arbiscan.io/address/0x6f3156ae13890ad2110e5041ac218230ef483d45) |
+| **cRLC Token** (ERC-7984) | `0x92B23f4A59175415ced5CB37e64a1FC6A9D79af4` | [Arbiscan ↗](https://sepolia.arbiscan.io/address/0x92B23f4A59175415ced5CB37e64a1FC6A9D79af4) |
+
+**Network details:**
+- **Chain:** Arbitrum Sepolia
+- **Chain ID:** `421614`
+- **RPC:** `https://sepolia-rollup.arbitrum.io/rpc`
+
+**Faucets you'll need:**
+- 💧 **Sepolia ETH** (for gas) — [Alchemy](https://www.alchemy.com/faucets/arbitrum-sepolia) · [Chainlink](https://faucets.chain.link/arbitrum-sepolia)
+- 🪙 **cRLC tokens** — [iExec Confidential DeFi Faucet](https://cdefi.iex.ec/)
+
+---
+
 ## 🛠️ Tech Stack
 
 | Layer | Technology |
@@ -102,28 +144,26 @@ NoxGuard is **fully deployed and operational** on Arbitrum Sepolia:
 | **Network** | Arbitrum Sepolia (Testnet) |
 | **Token** | cRLC (Confidential RLC) — ERC-7984 |
 | **Crypto Backend** | iExec Nox Protocol (FHE + TEE) |
+| **Hosting** | Vercel (frontend), Arbitrum Sepolia (contracts) |
 
 ---
 
-## ⚡ Quick Start
+## ⚡ Run Locally
+
+> Prefer to just try it? The [live demo](https://noxguard-one.vercel.app) is one click away.
 
 ### Prerequisites
 - **Node.js 18+** and npm
 - **MetaMask** (or any EIP-1193 compatible wallet)
 - **Arbitrum Sepolia ETH** for gas (~0.01 ETH is plenty)
-- **cRLC tokens** from [iExec faucet](https://cdefi.iex.ec/)
+- **cRLC tokens** from the [iExec faucet](https://cdefi.iex.ec/)
 
 ### Installation
 
 ```bash
-# Clone the repo
 git clone https://github.com/xnotok-ops/noxguard.git
 cd noxguard/frontend
-
-# Install dependencies
 npm install
-
-# Start the dev server
 npm run dev
 ```
 
@@ -189,12 +229,12 @@ const handle = encrypted.handle;
 const proof = encrypted.handleProof; // ✅ NOT encrypted.inputProof
 ```
 
+### "nonce too low" after switching wallets
+MetaMask caches a stale nonce after you switch accounts. Fix:
+**MetaMask → Settings → Advanced → "Clear activity tab data"**
+
 ### Multiple wallets conflict
 If you have **Tally Ho, Razor Wallet, Backpack, Zerion**, etc. installed alongside MetaMask, they all inject `window.ethereum` and fight over connection. **Disable all except MetaMask** for this dApp.
-
-### MetaMask nonce desync after wallet switch
-If you switch accounts and transactions start failing with nonce errors:
-**MetaMask → Settings → Advanced → "Clear activity and nonce data"**.
 
 ---
 
@@ -229,6 +269,7 @@ noxguard/
 │   │   ├── index.css            # Tailwind base
 │   │   └── utils/
 │   │       └── contracts.js     # ABIs and chain config
+│   ├── screenshots/             # Demo screenshots used in this README
 │   ├── index.html
 │   ├── package.json
 │   ├── vite.config.js
@@ -238,19 +279,6 @@ noxguard/
 ├── feedback.md                  # iExec SDK feedback for the team
 └── .gitignore
 ```
-
----
-
-## 🎬 Demo
-
-> _Demo video link coming soon — recording a full E2E walkthrough._
-
-**E2E flow verified on-chain:**
-
-1. ✅ **Owner created bounty** — encrypted reward locked in escrow
-2. ✅ **Hunter submitted finding** — report hash committed (`keccak256(toHex(report))`)
-3. ✅ **Owner approved & paid** — encrypted payout transferred
-4. ✅ **Hunter balance verified** — `confidentialBalanceOf` handle changed from sentinel to a real encrypted balance handle
 
 ---
 
@@ -274,4 +302,3 @@ MIT — see [LICENSE](LICENSE).
 Built by **Notok Labs** ([@xnotok-ops](https://github.com/xnotok-ops)) for the iExec Vibe Coding Challenge 2026.
 
 Found a bug? Open an issue on [GitHub](https://github.com/xnotok-ops/noxguard/issues).
-
